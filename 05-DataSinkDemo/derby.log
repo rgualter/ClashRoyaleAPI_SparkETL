@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Sun Oct 23 17:55:02 BRT 2022:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0184-06a0-a5f4-000004156f10 
+on database directory /home/ricardo/Documentos/Desenvolvimento/Spark-Programming/05-DataSinkDemo/metastore_db with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27 
+Loaded from file:/opt/spark/jars/derby-10.14.2.0.jar
+java.vendor=Ubuntu
+java.runtime.version=11.0.16+8-post-Ubuntu-0ubuntu122.04
+user.dir=/home/ricardo/Documentos/Desenvolvimento/Spark-Programming/05-DataSinkDemo
+os.name=Linux
+os.arch=amd64
+os.version=5.19.0-76051900-generic
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
