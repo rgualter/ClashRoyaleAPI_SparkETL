@@ -4,7 +4,7 @@ from pyspark.sql.functions import *
 from pyspark.sql.window import Window
 from lib.logger import Log4j
 import boto3, datetime, logging
-from _columns_ import *
+from ETL_files._columns_ import *
 
 s3 = boto3.client("s3")
 logger = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ class SparkSchemaDemo:
 
     def run(self, path):
         self.load_data(path)
-        for i in range(10):
+        for i in range(6):
             print(i)
             if i in [0, 2, 4, 6, 8]:
                 self.df = self.flatten_df(self.df)
@@ -89,13 +89,32 @@ class SparkSchemaDemo:
                 self.explode_team()
             elif i == 3:
                 self.explode_team_cards()
+            #elif i == 5:
+            #    self.explode_opponent()
+            #elif i == 7:
+            #    self.explode_opponent_cards()
             elif i == 5:
-                self.explode_opponent()
-            elif i == 7:
-                self.explode_opponent_cards()
-            elif i == 9:
-                self.df = self.df.select(*columns_9)
+                self.df = self.df.select(*columns_5)
         return self.df
+    
+    def run_opponent(self, path):
+        self.load_data(path)
+        for i in range(6):
+            print(i)
+            if i in [0, 2, 4, 6, 8]:
+                self.df = self.flatten_df(self.df)
+            elif i == 1:
+                self.explode_opponent()
+            elif i == 3:
+                self.explode_opponent_cards()
+            #elif i == 5:
+            #    self.explode_opponent()
+            #elif i == 7:
+            #    self.explode_opponent_cards()
+            elif i == 5:
+                self.df = self.df.select(*columns_5)
+        return self.df
+
     
 
 class S3DataWriter():
