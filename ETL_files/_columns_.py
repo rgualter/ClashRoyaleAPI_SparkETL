@@ -5,7 +5,7 @@ col_explode_3 = "opponent"
 col_explode_4 = "opponent_cards"
 
 
-columns_1 = [
+columns_explode_team = [
     "battleTime",
     "boatBattleSide",
     "boatBattleWon",
@@ -24,7 +24,30 @@ columns_1 = [
     "raw_file_name",
 ]
 
-columns_3 = [
+
+columns_explode_opponent = [
+    "battleTime",
+    "boatBattleSide",
+    "boatBattleWon",
+    "deckSelection",
+    "isHostedMatch",
+    "isLadderTournament",
+    "newTowersDestroyed",
+    "prevTowersDestroyed",
+    "remainingTowers",
+    "type",
+    "gameMode_id",
+    "gameMode_name",
+    "arena_id",
+    "arena_name",
+    "team",
+    "raw_file_name",
+]
+
+
+
+
+columns_explode_team_cards = [
     "battleTime",
     "boatBattleSide",
     "boatBattleWon",
@@ -53,7 +76,38 @@ columns_3 = [
     "raw_file_name",
 ]
 
-columns_5 = [
+columns_explode_opponent_cards = [
+    "battleTime",
+    "boatBattleSide",
+    "boatBattleWon",
+    "deckSelection",
+    "isHostedMatch",
+    "isLadderTournament",
+    "newTowersDestroyed",
+    "prevTowersDestroyed",
+    "remainingTowers",
+    "type",
+    "gameMode_id",
+    "gameMode_name",
+    "arena_id",
+    "arena_name",
+    "opponent_crowns",
+    "opponent_kingTowerHitPoints",
+    "opponent_name",
+    "opponent_princessTowersHitPoints",
+    "opponent_startingTrophies",
+    "opponent_tag",
+    "opponent_trophyChange",
+    "opponent_clan_badgeId",
+    "opponent_clan_name",
+    "opponent_clan_tag",
+    "raw_file_name",
+]
+
+
+
+
+columns_team_final = [
     "battleTime",
     "boatBattleSide",
     "boatBattleWon",
@@ -87,6 +141,63 @@ columns_5 = [
     "team_cards_iconUrls_medium",
     "raw_file_name",
 ]
+
+columns_opponent_final = [
+    "battleTime",
+    "boatBattleSide",
+    "boatBattleWon",
+    "deckSelection",
+    "isHostedMatch",
+    "isLadderTournament",
+    "newTowersDestroyed",
+    "prevTowersDestroyed",
+    "remainingTowers",
+    "type",
+    "gameMode_id",
+    "gameMode_name",
+    "arena_id",
+    "arena_name",
+    "opponent_crowns",
+    "opponent_kingTowerHitPoints",
+    "opponent_name",
+    "opponent_startingTrophies",
+    "opponent_tag",
+    "opponent_trophyChange",
+    "opponent_clan_badgeId",
+    "opponent_clan_name",
+    "opponent_clan_tag",
+    "opponent_princessTowersHitPoints_1",
+    "opponent_princessTowersHitPoints_2",
+    "opponent_cards_id",
+    "opponent_cards_level",
+    "opponent_cards_maxLevel",
+    "opponent_cards_name",
+    "opponent_cards_starLevel",
+    "opponent_cards_iconUrls_medium",
+    "raw_file_name",
+]
+
+columns_opponent_final_only_diferente_columns= [
+    "opponent_crowns",
+    "opponent_kingTowerHitPoints",
+    "opponent_name",
+    "opponent_startingTrophies",
+    "opponent_tag",
+    "opponent_trophyChange",
+    "opponent_clan_badgeId",
+    "opponent_clan_name",
+    "opponent_clan_tag",
+    "opponent_princessTowersHitPoints_1",
+    "opponent_princessTowersHitPoints_2",
+    "opponent_cards_id",
+    "opponent_cards_level",
+    "opponent_cards_maxLevel",
+    "opponent_cards_name",
+    "opponent_cards_starLevel",
+    "opponent_cards_iconUrls_medium",
+]
+
+
 
 columns_7 = [
     "battleTime",
