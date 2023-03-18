@@ -54,22 +54,22 @@ class SparkSchemaDemo:
         return nested_df.select(columns)
 
     def explode_team(self):
-        self.df = self.df.select(*columns_1, explode(self.df.team).alias(f"{col_explode_1}"))
+        self.df = self.df.select(*columns_explode_team, explode(self.df.team).alias(f"{col_explode_1}"))
 
     def explode_team_cards(self):
         self.df = self.df.select(
-            *columns_3,
+            *columns_explode_team_cards,
             col("team_princessTowersHitPoints").getItem(0).alias("team_princessTowersHitPoints_1"),
             col("team_princessTowersHitPoints").getItem(1).alias("team_princessTowersHitPoints_2"),
             explode(self.df.team_cards).alias(f"{col_explode_2}"),
         )
 
     def explode_opponent(self):
-        self.df = self.df.select(*columns_5, explode(self.df.opponent).alias(f"{col_explode_3}"))
+        self.df = self.df.select(*columns_explode_opponent, explode(self.df.opponent).alias(f"{col_explode_3}"))
 
     def explode_opponent_cards(self):
         self.df = self.df.select(
-            *columns_7,
+            *columns_explode_opponent_cards,
             col("opponent_princessTowersHitPoints").getItem(0).alias("opponent_princessTowersHitPoints_1"),
             col("opponent_princessTowersHitPoints").getItem(1).alias("opponent_princessTowersHitPoints_2"),
             explode(self.df.opponent_cards).alias(f"{col_explode_4}"),
@@ -79,9 +79,9 @@ class SparkSchemaDemo:
         window_spec = Window.partitionBy("raw_file_name").orderBy("battleTime")
         self.df = self.df.withColumn("file_battle_id", dense_rank().over(window_spec))
 
-    def run(self, path):
+    def flatten_team(self, path):
         self.load_data(path)
-        for i in range(10):
+        for i in range(6):
             print(i)
             if i in [0, 2, 4, 6, 8]:
                 self.df = self.flatten_df(self.df)
@@ -90,12 +90,59 @@ class SparkSchemaDemo:
             elif i == 3:
                 self.explode_team_cards()
             elif i == 5:
-                self.explode_opponent()
-            elif i == 7:
-                self.explode_opponent_cards()
-            elif i == 9:
-                self.df = self.df.select(*columns_9)
+                self.df = self.df.select(*columns_team_final)
         return self.df
+    
+    def flatten_opponent(self, path):
+        self.load_data(path)
+        for i in range(6):
+            print(i)
+            if i in [0, 2, 4, 6, 8]:
+                self.df = self.flatten_df(self.df)
+            elif i == 1:
+                self.explode_opponent()
+            elif i == 3:
+                self.explode_opponent_cards()
+            elif i == 5:
+                self.df = self.df.select(*columns_opponent_final)
+        return self.df
+
+    def flatten_join_df(self, path):
+        self.load_data(path)
+        for i in range(6):
+            print(i)
+            if i in [0, 2, 4]:
+                self.df = self.flatten_df(self.df)
+            elif i == 1:
+                self.explode_team()
+            elif i == 3:
+                self.explode_team_cards()
+            elif i == 5:
+                self.df = self.df.select(*columns_team_final)
+        team_df = self.df
+
+        self.load_data(path)
+        for i in range(6):
+            print(i)
+            if i in [0, 2, 4]:
+                self.df = self.flatten_df(self.df)
+            elif i == 1:
+                self.explode_opponent()
+            elif i == 3:
+                self.explode_opponent_cards()
+            elif i == 5:
+                self.df = self.df.select(*columns_opponent_final_only_diferente_columns)
+        opponent_df = self.df
+
+        team_df = team_df.withColumn("team_index", monotonically_increasing_id())
+        opponent_df = opponent_df.withColumn("opponent_index", monotonically_increasing_id())
+
+        return team_df.join(
+            opponent_df,
+            team_df["team_index"] == opponent_df["opponent_index"],
+            "inner",
+        ).drop("team_index", "opponent_index")
+
     
 
 class S3DataWriter():
@@ -109,7 +156,7 @@ class S3DataWriter():
         self.format = f"{format}"
         self.key = f"APIRoyale/players/sub_type=battlelog/transformed_at={self.date_str}/{self.now}.{self.format}"
         self.data = data
-    
+
     def write_parquet_to_s3(self):
         s3_path = self.key
         buffer = self.buffer
@@ -124,9 +171,9 @@ class S3DataWriter():
 
 
 if __name__ == "__main__":
-    path = "data/*.json"
+    path = "ETL_files/data/*.json"
     spark_schema_demo = SparkSchemaDemo()
-    df = spark_schema_demo.run(path)
+    df = spark_schema_demo.flatten_join_df(path)
     df.show()
     data_writer = S3DataWriter(df, "parquet")
     data_writer.write_parquet_to_s3()
