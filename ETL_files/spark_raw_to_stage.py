@@ -79,7 +79,7 @@ class SparkSchemaDemo:
         window_spec = Window.partitionBy("raw_file_name").orderBy("battleTime")
         self.df = self.df.withColumn("file_battle_id", dense_rank().over(window_spec))
 
-    def run(self, path):
+    def flatten_team(self, path):
         self.load_data(path)
         for i in range(6):
             print(i)
@@ -93,7 +93,7 @@ class SparkSchemaDemo:
                 self.df = self.df.select(*columns_team_final)
         return self.df
     
-    def run_opponent(self, path):
+    def flatten_opponent(self, path):
         self.load_data(path)
         for i in range(6):
             print(i)
@@ -107,7 +107,7 @@ class SparkSchemaDemo:
                 self.df = self.df.select(*columns_opponent_final)
         return self.df
 
-    def run_union(self, path):
+    def flatten_join_df(self, path):
         self.load_data(path)
         for i in range(6):
             print(i)
@@ -173,7 +173,7 @@ class S3DataWriter():
 if __name__ == "__main__":
     path = "ETL_files/data/*.json"
     spark_schema_demo = SparkSchemaDemo()
-    df = spark_schema_demo.run_union(path)
+    df = spark_schema_demo.flatten_join_df(path)
     df.show()
     data_writer = S3DataWriter(df, "parquet")
     data_writer.write_parquet_to_s3()
