@@ -10,25 +10,46 @@ s3 = boto3.client("s3")
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-
-class SparkSchemaDemo:
+class SparkFileLoader:
     def __init__(self):
         self.spark = (
             SparkSession.builder.master("local[3]")\
-                .appName("SparkSchemaDemo")\
-                .getOrCreate()
+                    .appName("SparkETL")\
+                    .getOrCreate()
         )
         self.logger = Log4j(self.spark)
         self.df = None
         self.spark._jsc.hadoopConfiguration().set("fs.s3a.aws.credentials.provider","com.amazonaws.auth.InstanceProfileCredentialsProvider,com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+        self.now = datetime.datetime.now()
+        self.date_str = self.now.strftime("%Y-%m-%d")
+        self.prefix = "APIRoyale/players/sub_type=battlelog/extracted_at=2023-02-21"
+        #self.prefix = (
+        #    f"APIRoyale/players/sub_type=battlelog/extracted_at={self.date_str}/"
+        #)
+        self.bucket_name = "apiroyale-raw"
 
     def add_raw_file_name(self, df):
         return df.withColumn("raw_file_name", input_file_name())
 
-    def load_data(self, path):
+    def load_data(self):
+        bucket_name = self.bucket_name
+        directory_name = self.prefix
+        path = f"s3a://{bucket_name}/{directory_name}/"
         self.df = self.spark.read.json(path)
         self.df = self.add_raw_file_name(self.df)
-        #self.df = self.df.withColumn("raw_file_name", input_file_name())
+
+class SparkETL(SparkFileLoader):
+    def __init__(self):
+        super().__init__()
+
+    def add_hash_battle_id(self, df):
+        self.df = df
+        return df.withColumn("hash_id",md5(concat("raw_file_name", "battleTime")))
+
+    def add_file_battle_id(self, df):
+        self.df = df
+        window_spec = Window.partitionBy("raw_file_name").orderBy("battleTime")
+        return df.withColumn("file_battle_id", dense_rank().over(window_spec))
 
     def flatten_df(self, nested_df):
         stack = [((), nested_df)]
@@ -75,15 +96,10 @@ class SparkSchemaDemo:
             explode(self.df.opponent_cards).alias(f"{col_explode_4}"),
         )
 
-    def add_file_battle_id(self):
-        window_spec = Window.partitionBy("raw_file_name").orderBy("battleTime")
-        self.df = self.df.withColumn("file_battle_id", dense_rank().over(window_spec))
-
     def flatten_team(self, path):
         self.load_data(path)
         for i in range(6):
-            print(i)
-            if i in [0, 2, 4, 6, 8]:
+            if i in [0, 2, 4]:
                 self.df = self.flatten_df(self.df)
             elif i == 1:
                 self.explode_team()
@@ -96,8 +112,7 @@ class SparkSchemaDemo:
     def flatten_opponent(self, path):
         self.load_data(path)
         for i in range(6):
-            print(i)
-            if i in [0, 2, 4, 6, 8]:
+            if i in [0, 2, 4]:
                 self.df = self.flatten_df(self.df)
             elif i == 1:
                 self.explode_opponent()
@@ -107,10 +122,9 @@ class SparkSchemaDemo:
                 self.df = self.df.select(*columns_opponent_final)
         return self.df
 
-    def flatten_join_df(self, path):
-        self.load_data(path)
+    def flatten_join_df(self):
+        self.load_data()
         for i in range(6):
-            print(i)
             if i in [0, 2, 4]:
                 self.df = self.flatten_df(self.df)
             elif i == 1:
@@ -121,9 +135,8 @@ class SparkSchemaDemo:
                 self.df = self.df.select(*columns_team_final)
         team_df = self.df
 
-        self.load_data(path)
+        self.load_data()
         for i in range(6):
-            print(i)
             if i in [0, 2, 4]:
                 self.df = self.flatten_df(self.df)
             elif i == 1:
@@ -135,16 +148,17 @@ class SparkSchemaDemo:
         opponent_df = self.df
 
         team_df = team_df.withColumn("team_index", monotonically_increasing_id())
+        team_df = self.add_hash_battle_id(team_df)
+
         opponent_df = opponent_df.withColumn("opponent_index", monotonically_increasing_id())
 
-        return team_df.join(
-            opponent_df,
+        df = team_df.join(opponent_df,
             team_df["team_index"] == opponent_df["opponent_index"],
             "inner",
         ).drop("team_index", "opponent_index")
-
     
-
+        return df
+    
 class S3DataWriter():
     def __init__(self, data, format):
         super().__init__()
@@ -169,12 +183,11 @@ class S3DataWriter():
         df = self.data
         df.select("*").write.format("csv").mode("overwrite").option("header", "true").save("data/output/teste.csv")
 
-
 if __name__ == "__main__":
-    path = "ETL_files/data/*.json"
-    spark_schema_demo = SparkSchemaDemo()
-    df = spark_schema_demo.flatten_join_df(path)
+    spark_schema_demo = SparkETL()
+    df = spark_schema_demo.flatten_join_df()
     df.show()
     data_writer = S3DataWriter(df, "parquet")
     data_writer.write_parquet_to_s3()
     data_writer.write_csv_local()
+
