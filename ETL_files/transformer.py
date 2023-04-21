@@ -4,8 +4,10 @@ from _columns_ import *
 from loader import *
 
 class SparkETL(SparkFileLoader):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,spark, bucket_name):
+        super().__init__(spark, bucket_name)
+        self.spark = spark
+        self.bucket_name = bucket_name
 
     def add_hash_battle_id(self, df):
         self.df = df
