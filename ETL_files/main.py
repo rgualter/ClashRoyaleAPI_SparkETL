@@ -15,7 +15,7 @@ if __name__ == "__main__":
         "com.amazonaws.auth.InstanceProfileCredentialsProvider,com.amazonaws.auth.DefaultAWSCredentialsProviderChain"
     )
     etl = SparkETL(spark, "apiroyale-raw")
-    df = etl.apply_flatten_join_df("2023-04-19") #put the date that needs to back a day (format: "2023-04-19"). Otherwise, None will return today.
+    df = etl.apply_flatten_join_df("2023-04-19") #put the date that needs to back the day (format: "2023-04-19"). Otherwise, None will return today.
     df.show()
     data_writer = S3DataWriter(data = df, format = "parquet", bucket_name = "apiroyale-stage")
     data_writer.write_to_s3()
