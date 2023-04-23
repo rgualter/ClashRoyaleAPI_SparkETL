@@ -1,4 +1,4 @@
-#!/home/ricardo/Documentos/Desenvolvimento/Spark-Programming/.venv/bin/python3
+#!/home/ricardo/Documentos/Desenvolvimento/SparkETL_ClashRoyale/.venv/bin/python3
 
 import sys
 import json

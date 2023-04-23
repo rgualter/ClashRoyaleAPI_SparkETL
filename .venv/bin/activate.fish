@@ -30,7 +30,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/ricardo/Documentos/Desenvolvimento/Spark-Programming/.venv"
+set -gx VIRTUAL_ENV "/home/ricardo/Documentos/Desenvolvimento/SparkETL_ClashRoyale/.venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

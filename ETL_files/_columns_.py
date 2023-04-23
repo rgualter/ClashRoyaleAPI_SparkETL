@@ -177,7 +177,7 @@ columns_opponent_final = [
     "raw_file_name",
 ]
 
-columns_opponent_final_only_diferente_columns= [
+columns_opponent_final_only_diferent_columns= [
     "opponent_crowns",
     "opponent_kingTowerHitPoints",
     "opponent_name",

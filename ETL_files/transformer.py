@@ -4,15 +4,15 @@ from _columns_ import *
 from loader import *
 
 class SparkETL(SparkFileLoader):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,spark, bucket_name):
+        super().__init__(spark, bucket_name)
+        self.spark = spark
+        self.bucket_name = bucket_name
 
     def add_hash_battle_id(self, df):
-        self.df = df
         return df.withColumn("hash_id", md5(concat("raw_file_name", "battleTime")))
 
     def add_file_battle_id(self, df):
-        self.df = df
         window_spec = Window.partitionBy("raw_file_name").orderBy("battleTime")
         return df.withColumn("file_battle_id", dense_rank().over(window_spec))
 
@@ -74,7 +74,13 @@ class SparkETL(SparkFileLoader):
             explode(self.df.opponent_cards).alias(f"{col_explode_4}"),
         )
 
-    def flatten_join_df(self, date=None):
+    def add_team_index(self, df):
+        return df.withColumn("team_index", monotonically_increasing_id())
+
+    def add_hash_battle_id(self, df):
+        return df.withColumn("hash_id", md5(concat("raw_file_name", "battleTime")))
+
+    def flatten_team_data(self, date=None):
         self.load_data(date)
         for i in range(6):
             if i in [0, 2, 4]:
@@ -86,7 +92,11 @@ class SparkETL(SparkFileLoader):
             elif i == 5:
                 self.df = self.df.select(*columns_team_final)
         team_df = self.df
+        team_df = self.add_team_index(team_df)
+        team_df = self.add_hash_battle_id(team_df)
+        return team_df
 
+    def flatten_opponent_data(self, date=None):
         self.load_data(date)
         for i in range(6):
             if i in [0, 2, 4]:
@@ -96,20 +106,20 @@ class SparkETL(SparkFileLoader):
             elif i == 3:
                 self.explode_opponent_cards()
             elif i == 5:
-                self.df = self.df.select(*columns_opponent_final_only_diferente_columns)
+                self.df = self.df.select(*columns_opponent_final_only_diferent_columns)
         opponent_df = self.df
-
-        team_df = team_df.withColumn("team_index", monotonically_increasing_id())
-        team_df = self.add_hash_battle_id(team_df)
-
-        opponent_df = opponent_df.withColumn(
-            "opponent_index", monotonically_increasing_id()
-        )
-
-        df = team_df.join(
+        opponent_df = opponent_df.withColumn("opponent_index", monotonically_increasing_id())
+        return opponent_df
+    
+    def join_team_opponent_data(self, team_df, opponent_df):
+        return team_df.join(
             opponent_df,
             team_df["team_index"] == opponent_df["opponent_index"],
             "inner",
         ).drop("team_index", "opponent_index")
 
-        return df
+    def apply_flatten_join_df(self, date=None):
+        team_df = self.flatten_team_data(date)
+        opponent_df = self.flatten_opponent_data(date)
+        return self.join_team_opponent_data(team_df, opponent_df)
+
